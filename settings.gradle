@@ -1,0 +1,2 @@
+rootProject.name = "CodeExp2021App"
+include ':app'
