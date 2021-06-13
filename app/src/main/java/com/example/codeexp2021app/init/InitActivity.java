@@ -18,7 +18,9 @@ public class InitActivity extends BaseActivity<ActivityInitBinding, InitViewMode
 
     private static final String TAG = InitActivity.class.getSimpleName();
 
-    private static final String[] PERMISSIONS = new String[]{};
+    private static final String[] PERMISSIONS = new String[]{
+            Manifest.permission.INTERNET,
+    };
 
     @Override
     public int initContentView(Bundle savedInstanceState) {

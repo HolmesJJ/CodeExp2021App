@@ -8,4 +8,13 @@
     <string name="need_permissions_str">Permission Required</string>
 
     <string name="loading_tips">Loading...</string>
+
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign In</string>
+
+    <string name="empty_username">Username is empty</string>
+    <string name="empty_password">Password is empty</string>
+    <string name="network_or_server_error_str">Network or Server Error</string>
+    <string name="website_format_error">Abnormal Server Address</string>
 </resources>
