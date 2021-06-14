@@ -19,7 +19,9 @@ public class InitActivity extends BaseActivity<ActivityInitBinding, InitViewMode
     private static final String TAG = InitActivity.class.getSimpleName();
 
     private static final String[] PERMISSIONS = new String[]{
-            Manifest.permission.INTERNET,
+            android.Manifest.permission.FOREGROUND_SERVICE,
+            android.Manifest.permission.RECORD_AUDIO,
+            android.Manifest.permission.INTERNET,
     };
 
     @Override

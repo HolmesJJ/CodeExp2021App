@@ -7,7 +7,7 @@ ext {
     android = [
             applicationId    : "com.example.codeexp2021app",
             compileSdkVersion: 30,
-            minSdkVersion    : 23,
+            minSdkVersion    : 29,
             targetSdkVersion : 30,
     ]
 
@@ -41,5 +41,12 @@ ext {
 
             // fastJson
             "fastJson"                   : "com.alibaba:fastjson:1.1.72.android",
+
+            // Java-WebSocket
+            "Java-WebSocket"             : "org.java-websocket:Java-WebSocket:1.5.1",
+
+            // RxAndroidAudio
+            "RxAndroidAudio"             : "com.github.piasy:rxandroidaudio:1.7.0",
+            "AudioProcessor"             :"com.github.piasy:AudioProcessor:1.7.0",
     ]
 }

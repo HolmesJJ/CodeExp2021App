@@ -88,6 +88,11 @@ dependencies {
     implementation rootProject.ext.dependencies["easypermissions"]
     // fastJson
     implementation rootProject.ext.dependencies["fastJson"]
+    // Java-WebSocket
+    implementation rootProject.ext.dependencies["Java-WebSocket"]
+    // RxAndroidAudio
+    implementation rootProject.ext.dependencies["RxAndroidAudio"]
+    implementation rootProject.ext.dependencies["AudioProcessor"]
     testImplementation rootProject.ext.dependencies["junit"]
     androidTestImplementation rootProject.ext.dependencies["test-ext"]
     androidTestImplementation rootProject.ext.dependencies["espresso-core"]

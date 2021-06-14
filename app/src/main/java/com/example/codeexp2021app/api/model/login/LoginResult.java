@@ -1,4 +1,4 @@
-package com.example.codeexp2021app.api.model;
+package com.example.codeexp2021app.api.model.login;
 
 public class LoginResult {
 

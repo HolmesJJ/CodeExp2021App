@@ -2,15 +2,16 @@ package com.example.codeexp2021app;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 
-import androidx.annotation.Nullable;
 import androidx.lifecycle.Observer;
 
 import com.example.codeexp2021app.base.BaseActivity;
+import com.example.codeexp2021app.constants.Constants;
 import com.example.codeexp2021app.databinding.ActivityMainBinding;
 import com.example.codeexp2021app.listener.OnMultiClickListener;
+import com.example.codeexp2021app.service.AudioCaptureService;
+import com.example.codeexp2021app.utils.ContextUtils;
 import com.example.codeexp2021app.utils.ListenerUtils;
 
 public class MainActivity extends BaseActivity<ActivityMainBinding, MainViewModel> {
@@ -35,16 +36,17 @@ public class MainActivity extends BaseActivity<ActivityMainBinding, MainViewMode
     @Override
     public void initData() {
         super.initData();
-        mViewModel.mUsername.set(mBinding.etUsername.getText().toString());
-        mViewModel.mPassword.set(mBinding.etPassword.getText().toString());
     }
 
     @Override
     public void initViewObservable() {
         super.initViewObservable();
         setObserveListener();
-        setTextChangeListener();
         setClickListener();
+        mViewModel.initCapturingBtnState();
+        if (mViewModel != null) {
+            mViewModel.createToken();
+        }
     }
 
     @Override
@@ -52,16 +54,28 @@ public class MainActivity extends BaseActivity<ActivityMainBinding, MainViewMode
         super.onDestroy();
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
     private void setObserveListener() {
+        mViewModel.mEnableStartCapturing.observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean aBoolean) {
+                mBinding.btnStartCapturing.setEnabled(aBoolean);
+            }
+        });
+        mViewModel.mEnableStopCapturing.observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean aBoolean) {
+                mBinding.btnStopCapturing.setEnabled(aBoolean);
+            }
+        });
+        mViewModel.mEnablePlay.observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean aBoolean) {
+                mBinding.btnPlay.setEnabled(aBoolean);
+            }
+        });
         mViewModel.mErrorMsg.observe(this, new Observer<String>() {
             @Override
-            public void onChanged(@Nullable String value) {
-                stopLoading();
+            public void onChanged(String value) {
                 if (mBinding != null) {
                     mBinding.tvErrorMsg.setText(value);
                 }
@@ -69,44 +83,39 @@ public class MainActivity extends BaseActivity<ActivityMainBinding, MainViewMode
         });
     }
 
-    private void setTextChangeListener() {
-        ListenerUtils.addTextChangeListener(mBinding.etUsername, new ListenerUtils.TextChange() {
+    private void setClickListener() {
+        ListenerUtils.setOnClickListener(mBinding.btnStartCapturing, new OnMultiClickListener() {
             @Override
-            public void textChange(String s) {
-                if (mViewModel != null) {
-                    String value = s == null ? "" : s;
-                    mViewModel.mUsername.set(value);
-                }
+            public void onMultiClick(View v) {
+                startAudioCaptureService();
+                mViewModel.startCapturingBtnState();
             }
         });
-        ListenerUtils.addTextChangeListener(mBinding.etPassword, new ListenerUtils.TextChange() {
+        ListenerUtils.setOnClickListener(mBinding.btnStopCapturing, new OnMultiClickListener() {
             @Override
-            public void textChange(String s) {
-                if (mViewModel != null) {
-                    String value = s == null ? "" : s;
-                    mViewModel.mPassword.set(value);
-                }
+            public void onMultiClick(View v) {
+                stopAudioCaptureService();
+                mViewModel.stopCapturingBtnState();
+            }
+        });
+        ListenerUtils.setOnClickListener(mBinding.btnPlay, new OnMultiClickListener() {
+            @Override
+            public void onMultiClick(View v) {
+                mViewModel.startPlayingBtnState();
+                mViewModel.play();
             }
         });
     }
 
-    private void setClickListener() {
-        ListenerUtils.setOnClickListener(mBinding.btnLogin, new OnMultiClickListener() {
-            @Override
-            public void onMultiClick(View v) {
-                if (TextUtils.isEmpty(mViewModel.mUsername.get())) {
-                    mBinding.tvErrorMsg.setText(R.string.empty_username);
-                    return;
-                }
-                if (TextUtils.isEmpty(mViewModel.mPassword.get())) {
-                    mBinding.tvErrorMsg.setText(R.string.empty_password);
-                    return;
-                }
-                if (mViewModel != null) {
-                    showLoading(false);
-                    mViewModel.login();
-                }
-            }
-        });
+    public void startAudioCaptureService() {
+        Intent serviceIntent = new Intent(ContextUtils.getContext(), AudioCaptureService.class);
+        serviceIntent.setAction(Constants.AUDIO_CAPTURE_SERVICE_START);
+        startForegroundService(serviceIntent);
+    }
+
+    public void stopAudioCaptureService() {
+        Intent serviceIntent = new Intent(ContextUtils.getContext(), AudioCaptureService.class);
+        serviceIntent.setAction(Constants.AUDIO_CAPTURE_SERVICE_STOP);
+        stopService(serviceIntent);
     }
 }

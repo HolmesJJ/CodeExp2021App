@@ -4,8 +4,8 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.OnLifecycleEvent;
 
-import com.example.codeexp2021app.MainActivity;
 import com.example.codeexp2021app.base.BaseViewModel;
+import com.example.codeexp2021app.ui.activity.LoginActivity;
 
 public class InitViewModel extends BaseViewModel {
 
@@ -28,6 +28,6 @@ public class InitViewModel extends BaseViewModel {
     }
 
     private void doInitSuccess() {
-        mActivityAction.postValue(MainActivity.class);
+        mActivityAction.postValue(LoginActivity.class);
     }
 }
