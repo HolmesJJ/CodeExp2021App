@@ -198,7 +198,7 @@ public class AudioCaptureService extends Service implements StreamAudioRecorder.
         if (!audioCapturesDirectory.exists()) {
             return null;
         }
-        File audioCaptureFile = new File(audioCapturesDirectory, "AudioCaptures.m4a");
+        File audioCaptureFile = new File(audioCapturesDirectory, Constants.AUDIO_CAPTURE_FILE);
         if (!audioCaptureFile.exists()) {
             return null;
         }
