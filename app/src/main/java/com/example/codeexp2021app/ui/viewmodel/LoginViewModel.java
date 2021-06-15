@@ -42,22 +42,20 @@ public class LoginViewModel extends BaseViewModel {
     }
 
     public void login() {
-//        String username = mUsername.get();
-//        String password = mPassword.get();
-//        ThreadManager.getThreadPollProxy().execute(new Runnable() {
-//            @Override
-//            public void run() {
-//                Result<LoginResult> result = ApiClient.login(username, password);
-//                if (result.isSuccess()) {
-//                    LoginResult body = result.getBody(LoginResult.class);
-//                    mActivityAction.postValue(MainActivity.class);
-//                } else {
-//                    doResultErrorMsg(result);
-//                }
-//            }
-//        });
-
-        mActivityAction.postValue(MainActivity.class);
+        String username = mUsername.get();
+        String password = mPassword.get();
+        ThreadManager.getThreadPollProxy().execute(new Runnable() {
+            @Override
+            public void run() {
+                Result<LoginResult> result = ApiClient.login(username, password);
+                if (result.isSuccess()) {
+                    LoginResult body = result.getBody(LoginResult.class);
+                    mActivityAction.postValue(MainActivity.class);
+                } else {
+                    doResultErrorMsg(result);
+                }
+            }
+        });
     }
 
     /**

@@ -3,6 +3,7 @@ package com.example.codeexp2021app.network.websocket;
 import android.util.Log;
 
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 public class WebSocketClientManager {
@@ -86,6 +87,17 @@ public class WebSocketClientManager {
             try {
                 customWebSocketServerClient.send(message);
                 Log.i(TAG, "message: " + message);
+            } catch (Exception e) {
+                Log.i(TAG, "Send Exception: " + e);
+            }
+        }
+    }
+
+    public void sendData(ByteBuffer data) {
+        if(customWebSocketServerClient != null && isConnected) {
+            try {
+                customWebSocketServerClient.send(data);
+                Log.i(TAG, "data: " + data);
             } catch (Exception e) {
                 Log.i(TAG, "Send Exception: " + e);
             }
