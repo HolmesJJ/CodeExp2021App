@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
@@ -20,6 +22,7 @@ import com.example.codeexp2021app.ui.widget.dialog.RadioSelectDialog;
 import com.example.codeexp2021app.ui.widget.dialog.SeekBarDialog;
 import com.example.codeexp2021app.utils.ContextUtils;
 import com.example.codeexp2021app.utils.ListenerUtils;
+import com.example.codeexp2021app.utils.StatusBarUtils;
 import com.flask.colorpicker.ColorPickerView;
 import com.flask.colorpicker.OnColorSelectedListener;
 import com.flask.colorpicker.builder.ColorPickerClickListener;
@@ -54,6 +57,7 @@ public class MainActivity extends BaseActivity<ActivityMainBinding, MainViewMode
     @Override
     public void initData() {
         super.initData();
+        StatusBarUtils.updateStatusBarColor(this, ContextCompat.getColor(ContextUtils.getContext(), R.color.light_green));
         mBinding.toolbar.setTitle(ContextUtils.getContext().getString(R.string.main_menu));
         mBinding.fontSize.setLeftText(R.string.front_size).setRightText(Config.sFrontSize + "sp").setBottomLineVisible(false)
                 .setItemClickListener(

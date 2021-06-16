@@ -3,6 +3,8 @@ package com.example.codeexp2021app.init;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.core.content.ContextCompat;
+
 import com.example.codeexp2021app.BR;
 import com.example.codeexp2021app.R;
 import com.example.codeexp2021app.base.BaseActivity;
@@ -10,6 +12,7 @@ import com.example.codeexp2021app.constants.Constants;
 import com.example.codeexp2021app.databinding.ActivityInitBinding;
 import com.example.codeexp2021app.utils.ContextUtils;
 import com.example.codeexp2021app.utils.PermissionsUtils;
+import com.example.codeexp2021app.utils.StatusBarUtils;
 
 import pub.devrel.easypermissions.EasyPermissions;
 
@@ -44,6 +47,8 @@ public class InitActivity extends BaseActivity<ActivityInitBinding, InitViewMode
     @Override
     public void initData() {
         super.initData();
+        StatusBarUtils.updateStatusBarColor(this, ContextCompat.getColor(ContextUtils.getContext(), R.color.white));
+        StatusBarUtils.setStatusBarTextBlack(this);
         PermissionsUtils.doSomeThingWithPermission(this, () -> {
             if (mViewModel != null) {
                 mViewModel.initData();

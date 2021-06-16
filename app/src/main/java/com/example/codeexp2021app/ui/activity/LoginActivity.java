@@ -4,8 +4,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
 
 import com.example.codeexp2021app.BR;
@@ -14,7 +17,9 @@ import com.example.codeexp2021app.base.BaseActivity;
 import com.example.codeexp2021app.databinding.ActivityLoginBinding;
 import com.example.codeexp2021app.listener.OnMultiClickListener;
 import com.example.codeexp2021app.ui.viewmodel.LoginViewModel;
+import com.example.codeexp2021app.utils.ContextUtils;
 import com.example.codeexp2021app.utils.ListenerUtils;
+import com.example.codeexp2021app.utils.StatusBarUtils;
 import com.example.codeexp2021app.utils.ToastUtils;
 
 public class LoginActivity extends BaseActivity<ActivityLoginBinding, LoginViewModel> {
@@ -39,6 +44,8 @@ public class LoginActivity extends BaseActivity<ActivityLoginBinding, LoginViewM
     @Override
     public void initData() {
         super.initData();
+        StatusBarUtils.updateStatusBarColor(this, ContextCompat.getColor(ContextUtils.getContext(), R.color.white));
+        StatusBarUtils.setStatusBarTextBlack(this);
         mViewModel.mUsername.set(mBinding.etUsername.getText().toString());
         mViewModel.mPassword.set(mBinding.etPassword.getText().toString());
     }
