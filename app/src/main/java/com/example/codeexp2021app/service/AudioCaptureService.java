@@ -5,49 +5,88 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
-import android.media.MediaRecorder;
 import android.os.IBinder;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.alibaba.fastjson.JSON;
 import com.example.codeexp2021app.R;
-import com.example.codeexp2021app.api.model.sogou.AudioConfigParameter;
-import com.example.codeexp2021app.api.model.sogou.StreamConfigParameter;
+import com.example.codeexp2021app.api.interceptor.google.GoogleCredentialsInterceptor;
 import com.example.codeexp2021app.config.Config;
 import com.example.codeexp2021app.constants.Constants;
-import com.example.codeexp2021app.network.websocket.WebSocketClientManager;
+import com.example.codeexp2021app.constants.MessageType;
+import com.example.codeexp2021app.listener.AudioRecordListener;
+import com.example.codeexp2021app.media.AudioRecordHelper;
 import com.example.codeexp2021app.thread.CustomThreadPool;
 import com.example.codeexp2021app.utils.ContextUtils;
-import com.example.codeexp2021app.utils.FileUtils;
-import com.example.codeexp2021app.utils.ToastUtils;
-import com.github.piasy.rxandroidaudio.StreamAudioRecorder;
+import com.example.codeexp2021app.utils.LanguageUtils;
+import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.speech.v1.RecognitionConfig;
+import com.google.cloud.speech.v1.SpeechGrpc;
+import com.google.cloud.speech.v1.SpeechRecognitionAlternative;
+import com.google.cloud.speech.v1.StreamingRecognitionConfig;
+import com.google.cloud.speech.v1.StreamingRecognitionResult;
+import com.google.cloud.speech.v1.StreamingRecognizeRequest;
+import com.google.cloud.speech.v1.StreamingRecognizeResponse;
+import com.google.protobuf.ByteString;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
-public class AudioCaptureService extends Service implements StreamAudioRecorder.AudioDataCallback {
+import io.grpc.ManagedChannel;
+import io.grpc.internal.DnsNameResolverProvider;
+import io.grpc.okhttp.OkHttpChannelProvider;
+import io.grpc.stub.StreamObserver;
+
+public class AudioCaptureService extends Service implements AudioRecordListener {
 
     private static final String TAG = AudioCaptureService.class.getSimpleName();
 
     private static final CustomThreadPool threadPoolCaptureAudio = new CustomThreadPool(Thread.MAX_PRIORITY);
-    private static final CustomThreadPool threadPoolSendAudio = new CustomThreadPool(Thread.MAX_PRIORITY);
+    private static final CustomThreadPool threadPoolRecognizing = new CustomThreadPool(Thread.MAX_PRIORITY);
 
-    private StreamAudioRecorder mStreamAudioRecorder;
-    private FileOutputStream mFileOutputStream;
-    private volatile boolean mIsRecording;
-    private volatile boolean mIsSendAudioReady;
+    private SpeechGrpc.SpeechStub mApi;
+    private StreamObserver<StreamingRecognizeRequest> mRequestObserver;
+
+    private final StreamObserver<StreamingRecognizeResponse> mResponseObserver
+            = new StreamObserver<StreamingRecognizeResponse>() {
+        @Override
+        public void onNext(StreamingRecognizeResponse response) {
+            String text = null;
+            boolean isFinal = false;
+            if (response.getResultsCount() > 0) {
+                final StreamingRecognitionResult result = response.getResults(0);
+                isFinal = result.getIsFinal();
+                if (result.getAlternativesCount() > 0) {
+                    final SpeechRecognitionAlternative alternative = result.getAlternatives(0);
+                    text = alternative.getTranscript();
+                }
+            }
+            if (text != null) {
+                Intent recognizedIntent = new Intent(MessageType.RECOGNIZED.getValue());
+                recognizedIntent.putExtra("text", text);
+                recognizedIntent.putExtra("isFinal", isFinal);
+                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(recognizedIntent);
+            }
+        }
+
+        @Override
+        public void onError(Throwable t) {
+            Log.e(TAG, "Error calling the API.", t);
+            finishRecognizing();
+            startRecognizing(AudioRecordHelper.getInstance().getSampleRate());
+        }
+
+        @Override
+        public void onCompleted() {
+            Log.i(TAG, "API completed.");
+        }
+    };
 
     @Override
     public void onCreate() {
@@ -65,12 +104,15 @@ public class AudioCaptureService extends Service implements StreamAudioRecorder.
                     .setSmallIcon(R.mipmap.ic_launcher)
                     .build();
             startForeground(Constants.AUDIO_CAPTURE_SERVICE_CHANNEL_ID, notification);
+            initGRPC();
+            AudioRecordHelper.getInstance().init(this);
             startCaptureAudioTask();
             // 系统被杀死后将尝试重新创建服务
-            startSendAudioTask();
             return START_STICKY;
         } else {
             stopCaptureAudioTask();
+            AudioRecordHelper.getInstance().release();
+            releaseGRPC();
             stopForeground(true);
             stopSelf();
             // 系统被终止后将不会尝试重新创建服务
@@ -89,6 +131,8 @@ public class AudioCaptureService extends Service implements StreamAudioRecorder.
     public void onDestroy() {
         Log.d(TAG, "onDestroy");
         stopCaptureAudioTask();
+        AudioRecordHelper.getInstance().release();
+        releaseGRPC();
         stopForeground(true);
         stopSelf();
         super.onDestroy();
@@ -104,135 +148,109 @@ public class AudioCaptureService extends Service implements StreamAudioRecorder.
         manager.createNotificationChannel(serviceChannel);
     }
 
-    private void startCaptureAudioTask() {
-        File outputFile = createAudioFile();
-        Log.d(TAG, "Created file for capture target: " + outputFile.getAbsolutePath());
-        try {
-            mFileOutputStream = new FileOutputStream(outputFile);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return;
-        }
-        threadPoolCaptureAudio.execute(() -> {
-            mIsRecording = true;
-            mStreamAudioRecorder = StreamAudioRecorder.getInstance();
-            mStreamAudioRecorder.start(AudioCaptureService.this);
-            startSendAudioTask();
-        });
+    private void initGRPC() {
+        AccessToken accessToken = new AccessToken(Config.sToken, new Date(Config.sExpirationTime));
+        ManagedChannel channel = new OkHttpChannelProvider()
+                .builderForAddress(Constants.HOSTNAME, Constants.PORT)
+                .nameResolverFactory(new DnsNameResolverProvider())
+                .intercept(new GoogleCredentialsInterceptor(new GoogleCredentials(accessToken)
+                        .createScoped(Constants.SCOPE)))
+                .build();
+        mApi = SpeechGrpc.newStub(channel);
     }
 
-    private File createAudioFile() {
-        File audioCapturesDirectory = new File(FileUtils.APP_DIR, Constants.AUDIO_CAPTURE_DIRECTORY);
-        FileUtils.deleteDirectory(audioCapturesDirectory.getAbsolutePath());
-        if (!audioCapturesDirectory.exists()) {
-            audioCapturesDirectory.mkdirs();
-        }
-        return new File(audioCapturesDirectory.getAbsolutePath() + File.separator + Constants.AUDIO_CAPTURE_FILE);
+    private void startCaptureAudioTask() {
+        threadPoolCaptureAudio.execute(() -> {
+            AudioRecordHelper.getInstance().start();
+            AudioRecordHelper.getInstance().process();
+        });
     }
 
     private void stopCaptureAudioTask() {
-        stopSendAudioTask();
-        if (mStreamAudioRecorder != null) {
-            mStreamAudioRecorder.stop();
-            mStreamAudioRecorder = null;
-        }
-        threadPoolCaptureAudio.release();
-        mIsRecording = false;
+        AudioRecordHelper.getInstance().stop();
     }
 
-    private void beforeSendAudioTask() throws URISyntaxException {
-        Map<String, String> authHeader = new HashMap<>();
-        authHeader.put("Appid", Constants.APP_ID);
-        authHeader.put("Authorization", "Bearer " + Config.sSogouToken);
-        Log.i(TAG, "[Appid: " + authHeader.get("Appid") + ", Authorization " + authHeader.get("Authorization") + "]");
-        WebSocketClientManager.getInstance().connect(new URI(Constants.SOGOU_WSS + "asr/v1/streaming_recognize"), authHeader);
-        WebSocketClientManager.getInstance().connectBlocking();
-        AudioConfigParameter audioConfigParameter = new AudioConfigParameter();
-        audioConfigParameter.setEncoding("LINEAR16");
-        audioConfigParameter.setSampleRateHertz(16000);
-        audioConfigParameter.setLanguageCode("zh-cmn-Hans-CN");
-        StreamConfigParameter streamConfigParameter = new StreamConfigParameter();
-        streamConfigParameter.setAudioConfigParameter(audioConfigParameter);
-        streamConfigParameter.setInterimResults(true);
-        WebSocketClientManager.getInstance().sendMessage(JSON.toJSONString(streamConfigParameter));
-    }
-
-    private void startSendAudioTask() {
-        threadPoolSendAudio.execute(() -> {
-            try {
-                beforeSendAudioTask();
-                mIsSendAudioReady = true;
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    private void stopSendAudioTask() {
-        WebSocketClientManager.getInstance().sendMessage("{}");
-        WebSocketClientManager.getInstance().disconnect();
-        threadPoolSendAudio.release();
-        mIsSendAudioReady = false;
-    }
-
-    @Override
-    public void onAudioData(byte[] data, int size) {
-        if (mFileOutputStream != null && mIsSendAudioReady) {
-            try {
-                mFileOutputStream.write(data, 0, size);
-                WebSocketClientManager.getInstance().sendData(ByteBuffer.wrap(data, 0, size));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public void onError() {
-        stopCaptureAudioTask();
-        ToastUtils.showShortSafe("Record fail");
-    }
-
-    private File getAudioCaptureFile() {
-        File audioCapturesDirectory = new File(FileUtils.APP_DIR, Constants.AUDIO_CAPTURE_DIRECTORY);
-        if (!audioCapturesDirectory.exists()) {
-            return null;
-        }
-        File audioCaptureFile = new File(audioCapturesDirectory, Constants.AUDIO_CAPTURE_FILE);
-        if (!audioCaptureFile.exists()) {
-            return null;
-        }
-        return audioCaptureFile;
-    }
-
-    private void test() {
-        File outputFile = getAudioCaptureFile();
-        if (outputFile == null) {
+    /**
+     * Starts recognizing speech audio.
+     *
+     * @param sampleRate The sample rate of the audio.
+     */
+    private void startRecognizing(int sampleRate) {
+        if (mApi == null) {
+            Log.w(TAG, "API not ready. Ignoring the request.");
             return;
         }
-        try {
-            FileInputStream inputStream = new FileInputStream(outputFile);
-            sendAudio(inputStream);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        threadPoolRecognizing.execute(() -> {
+            // Configure the API
+            mRequestObserver = mApi.streamingRecognize(mResponseObserver);
+            mRequestObserver.onNext(StreamingRecognizeRequest.newBuilder()
+                    .setStreamingConfig(StreamingRecognitionConfig.newBuilder()
+                            .setConfig(RecognitionConfig.newBuilder()
+                                    .setLanguageCode(LanguageUtils.getDefaultLanguageCode())
+                                    .setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
+                                    .setSampleRateHertz(sampleRate)
+                                    .build())
+                            .setInterimResults(true)
+                            .setSingleUtterance(true)
+                            .build())
+                    .build());
+        });
+    }
+
+    /**
+     * Recognizes the speech audio. This method should be called every time a chunk of byte buffer
+     * is ready.
+     *
+     * @param data The audio data.
+     * @param size The number of elements that are actually relevant in the {@code data}.
+     */
+    private void recognize(byte[] data, int size) {
+        if (mRequestObserver == null) {
+            return;
+        }
+        // Call the streaming recognition API
+        mRequestObserver.onNext(StreamingRecognizeRequest.newBuilder()
+                .setAudioContent(ByteString.copyFrom(data, 0, size))
+                .build());
+    }
+
+    /**
+     * Finishes recognizing speech audio.
+     */
+    private void finishRecognizing() {
+        if (mRequestObserver == null) {
+            return;
+        }
+        mRequestObserver.onCompleted();
+        mRequestObserver = null;
+    }
+
+    private void releaseGRPC() {
+        if (mApi != null) {
+            final ManagedChannel channel = (ManagedChannel) mApi.getChannel();
+            if (channel != null && !channel.isShutdown()) {
+                try {
+                    channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Log.e(TAG, "Error shutting down the gRPC channel.", e);
+                }
+            }
+            mApi = null;
         }
     }
 
-    private void sendAudio(final InputStream in) {
-        threadPoolSendAudio.execute(() -> {
-            try {
-                byte[] buf = new byte[3200];
-                for(;;) {
-                    int n = in.read(buf);
-                    if (n <= 0) {
-                        break;
-                    }
-                    WebSocketClientManager.getInstance().sendData(ByteBuffer.wrap(buf, 0, n));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            WebSocketClientManager.getInstance().sendMessage("{}");
-        });
+    @Override
+    public void onAudioStart() {
+        startRecognizing(AudioRecordHelper.getInstance().getSampleRate());
+    }
+
+    @Override
+    public void onAudio(byte[] data, int size) {
+        recognize(data, size);
+    }
+
+    @Override
+    public void onAudioEnd() {
+        finishRecognizing();
     }
 }

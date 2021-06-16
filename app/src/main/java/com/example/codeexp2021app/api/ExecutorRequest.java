@@ -3,7 +3,6 @@ package com.example.codeexp2021app.api;
 import androidx.annotation.NonNull;
 
 import com.example.codeexp2021app.api.interceptor.HeaderInterceptor;
-import com.example.codeexp2021app.api.interceptor.ReCreateTokenInterceptor;
 import com.example.codeexp2021app.api.interceptor.ResponseInterceptor;
 import com.example.codeexp2021app.network.http.Executor;
 import com.example.codeexp2021app.network.http.Request;
@@ -33,7 +32,6 @@ public class ExecutorRequest {
             interceptorList = new ArrayList<>();
         }
         interceptorList.add(new HeaderInterceptor());
-        interceptorList.add(new ReCreateTokenInterceptor());
         interceptorList.add(new ResponseInterceptor());
         if(request.getConnectTimeout() <= 0) {
             request.setConnectTimeout(instance.getConnectTimeout());

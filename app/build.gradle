@@ -1,6 +1,9 @@
 plugins {
     id 'com.android.application'
 }
+plugins {
+    id 'com.google.protobuf'
+}
 
 static def releaseTime() {
     return new Date().format("yyyy.MM.dd", TimeZone.getTimeZone("UTC"))
@@ -49,8 +52,8 @@ android {
             }
         }
     }
-    dataBinding {
-        enabled = true
+    buildFeatures {
+        dataBinding true
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -64,6 +67,31 @@ android {
             dimension "app"
             applicationId = "com.example.codeexp2021app"
             manifestPlaceholders = [deviceType: "DEVICE_TYPE"]
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = rootProject.ext.dependencies["protoc"]
+    }
+    plugins {
+        javalite {
+            artifact = rootProject.ext.dependencies["protoc-gen-javalite"]
+        }
+        grpc {
+            artifact = rootProject.ext.dependencies["protoc-gen-grpc-java"]
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.plugins {
+                javalite {}
+                grpc {
+                    // Options added to --grpc_out
+                    option 'lite'
+                }
+            }
         }
     }
 }
@@ -90,10 +118,26 @@ dependencies {
     implementation rootProject.ext.dependencies["fastJson"]
     // Java-WebSocket
     implementation rootProject.ext.dependencies["Java-WebSocket"]
-    // RxAndroidAudio
-    implementation rootProject.ext.dependencies["RxAndroidAudio"]
-    implementation rootProject.ext.dependencies["AudioProcessor"]
+    // gRPC
+    implementation rootProject.ext.dependencies["grpc-okhttp"]
+    implementation rootProject.ext.dependencies["grpc-protobuf-lite"]
+    implementation rootProject.ext.dependencies["grpc-stub"]
+    implementation rootProject.ext.dependencies["javax-annotation"]
+    protobuf rootProject.ext.dependencies["protobuf"]
+    // OAuth2 for Google API
+    implementation(rootProject.ext.dependencies["google-auth"]) {
+        exclude module: 'httpclient'
+    }
     testImplementation rootProject.ext.dependencies["junit"]
     androidTestImplementation rootProject.ext.dependencies["test-ext"]
     androidTestImplementation rootProject.ext.dependencies["espresso-core"]
 }
+
+task copySecretKey(type: Copy) {
+    def File secretKey = file "$System.env.GOOGLE_APPLICATION_CREDENTIALS"
+    from secretKey.getParent()
+    include secretKey.getName()
+    into 'src/main/res/raw'
+    rename secretKey.getName(), "credential.json"
+}
+preBuild.dependsOn(copySecretKey)

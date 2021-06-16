@@ -20,6 +20,4 @@
     <string name="stop_capturing">Stop Capturing</string>
     <string name="play">Play</string>
     <string name="audio_capturing">Audio Capturing...</string>
-
-    <string name="file_not_exist_error">File does not exist</string>
 </resources>
