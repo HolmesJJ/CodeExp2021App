@@ -1,11 +1,20 @@
 package com.example.codeexp2021app.media;
 
+import android.content.Context;
+import android.media.AudioAttributes;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.util.Log;
 
+import com.example.codeexp2021app.constants.Constants;
 import com.example.codeexp2021app.listener.AudioRecordListener;
+import com.example.codeexp2021app.utils.ContextUtils;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /**
  * Continuously records audio and notifies the {@link AudioRecordListener} when voice (or any
@@ -16,11 +25,6 @@ import com.example.codeexp2021app.listener.AudioRecordListener;
  * for the device. Use {@link #getSampleRate()} to get the selected value.</p>
  */
 public class AudioRecordHelper {
-
-    private static final int[] SAMPLE_RATE_CANDIDATES = new int[]{16000, 11025, 22050, 44100};
-
-    private static final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
-    private static final int ENCODING = AudioFormat.ENCODING_PCM_16BIT;
 
     private static final int AMPLITUDE_THRESHOLD = 1500;
     private static final int SPEECH_TIMEOUT_MILLIS = 2000;
@@ -47,7 +51,10 @@ public class AudioRecordHelper {
 
     private final Object mLock = new Object();
     private AudioRecord mAudioRecord;
+    private AudioTrack mAudioTrack;
+    private AudioManager mAudioManager;
     private byte[] mBuffer;
+    private int mBufferSize;
 
     /** The timestamp of the last time that voice is heard. */
     private long mLastVoiceHeardMillis = Long.MAX_VALUE;
@@ -68,8 +75,11 @@ public class AudioRecordHelper {
         if (mAudioRecord == null) {
             throw new RuntimeException("Cannot instantiate AudioRecorder");
         }
+        mAudioTrack = createAudioTrack();
+        initAudioManager();
         // Start recording.
         mAudioRecord.startRecording();
+        mAudioTrack.play();
     }
 
     /**
@@ -83,6 +93,11 @@ public class AudioRecordHelper {
                 mAudioRecord.stop();
                 mAudioRecord.release();
                 mAudioRecord = null;
+            }
+            if (mAudioTrack != null) {
+                mAudioTrack.pause();
+//                mAudioTrack.release();
+//                mAudioTrack = null;
             }
             mBuffer = null;
         }
@@ -124,21 +139,43 @@ public class AudioRecordHelper {
      * permissions?).
      */
     private AudioRecord createAudioRecord() {
-        for (int sampleRate : SAMPLE_RATE_CANDIDATES) {
-            final int sizeInBytes = AudioRecord.getMinBufferSize(sampleRate, CHANNEL, ENCODING);
+        for (int sampleRate : Constants.SAMPLE_RATE_CANDIDATES) {
+            final int sizeInBytes = AudioRecord.getMinBufferSize(sampleRate, Constants.CHANNEL_IN, Constants.ENCODING);
             if (sizeInBytes == AudioRecord.ERROR_BAD_VALUE) {
                 continue;
             }
             final AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
-                    sampleRate, CHANNEL, ENCODING, sizeInBytes);
+                    sampleRate, Constants.CHANNEL_IN, Constants.ENCODING, sizeInBytes);
             if (audioRecord.getState() == AudioRecord.STATE_INITIALIZED) {
-                mBuffer = new byte[sizeInBytes];
+                mBufferSize = sizeInBytes;
+                mBuffer = new byte[mBufferSize];
                 return audioRecord;
             } else {
                 audioRecord.release();
             }
         }
         return null;
+    }
+
+    private AudioTrack createAudioTrack() {
+        return mAudioTrack = new AudioTrack(
+                new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build(),
+                new AudioFormat.Builder()
+                        .setSampleRate(getSampleRate())
+                        .setEncoding(Constants.ENCODING)
+                        .setChannelMask(Constants.CHANNEL_OUT).build(),
+                mBufferSize,
+                AudioTrack.MODE_STREAM,
+                AudioManager.AUDIO_SESSION_ID_GENERATE);
+    }
+
+    private void initAudioManager() {
+        mAudioManager = (AudioManager) ContextUtils.getContext().getSystemService(Context.AUDIO_SERVICE);
+        mAudioManager.setSpeakerphoneOn(true);
+        mAudioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
     }
 
     /**
@@ -153,6 +190,7 @@ public class AudioRecordHelper {
                     break;
                 }
                 final int size = mAudioRecord.read(mBuffer, 0, mBuffer.length);
+                mAudioTrack.write(mBuffer, 0, size);
                 final long now = System.currentTimeMillis();
                 if (isHearingVoice(mBuffer, size)) {
                     if (mLastVoiceHeardMillis == Long.MAX_VALUE) {
@@ -180,6 +218,11 @@ public class AudioRecordHelper {
                         if (mAudioRecordListener != null) {
                             mAudioRecordListener.onAudioEnd();
                         }
+                    }
+                }
+                if (size > 0) {
+                    if (mAudioRecordListener != null) {
+                        mAudioRecordListener.onFile(mBuffer, size);
                     }
                 }
             }

@@ -21,4 +21,13 @@ public interface AudioRecordListener {
      * Called when the recorder stops hearing voice.
      */
     public void onAudioEnd();
+
+    /**
+     * Called when the recorder is hearing voice.
+     * This data is used to be saved as pcm file.
+     *
+     * @param data The audio data in {@link AudioFormat#ENCODING_PCM_16BIT}.
+     * @param size The size of the actual data in {@code data}.
+     */
+    public void onFile(byte[] data, int size);
 }

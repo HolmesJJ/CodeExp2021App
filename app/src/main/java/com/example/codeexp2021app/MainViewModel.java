@@ -17,12 +17,16 @@ import com.example.codeexp2021app.api.ApiClient;
 import com.example.codeexp2021app.api.model.google.CreateTokenResult;
 import com.example.codeexp2021app.base.BaseViewModel;
 import com.example.codeexp2021app.config.Config;
+import com.example.codeexp2021app.constants.Constants;
 import com.example.codeexp2021app.constants.MessageType;
 import com.example.codeexp2021app.media.AudioRecordHelper;
 import com.example.codeexp2021app.network.http.ResponseCode;
 import com.example.codeexp2021app.network.http.Result;
 import com.example.codeexp2021app.thread.ThreadManager;
 import com.example.codeexp2021app.utils.ContextUtils;
+import com.example.codeexp2021app.utils.FileUtils;
+
+import java.io.File;
 
 public class MainViewModel extends BaseViewModel {
 
@@ -150,23 +154,23 @@ public class MainViewModel extends BaseViewModel {
         }
     }
 
-//    private File getAudioCaptureFile() {
-//        File audioCapturesDirectory = new File(FileUtils.APP_DIR, Constants.AUDIO_CAPTURE_DIRECTORY);
-//        if (!audioCapturesDirectory.exists()) {
-//            return null;
-//        }
-//        File audioCaptureFile = new File(audioCapturesDirectory, Constants.AUDIO_CAPTURE_FILE);
-//        if (!audioCaptureFile.exists()) {
-//            return null;
-//        }
-//        return audioCaptureFile;
-//    }
+    private File getAudioCaptureFile() {
+        File audioCapturesDirectory = new File(FileUtils.APP_DIR, Constants.AUDIO_CAPTURE_DIRECTORY);
+        if (!audioCapturesDirectory.exists()) {
+            return null;
+        }
+        File audioCaptureFile = new File(audioCapturesDirectory, Constants.AUDIO_CAPTURE_WAV);
+        if (!audioCaptureFile.exists()) {
+            return null;
+        }
+        return audioCaptureFile;
+    }
 
     public void play() {
-//        File outputFile = getAudioCaptureFile();
-//        if (outputFile == null) {
-//            return;
-//        }
+        File outputFile = getAudioCaptureFile();
+        if (outputFile == null) {
+            return;
+        }
 //        Observable.just(outputFile).subscribeOn(Schedulers.io()).subscribe(new Consumer<File>() {
 //            @Override
 //            public void accept(File file) {

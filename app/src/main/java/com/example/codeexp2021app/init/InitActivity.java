@@ -21,6 +21,7 @@ public class InitActivity extends BaseActivity<ActivityInitBinding, InitViewMode
     private static final String[] PERMISSIONS = new String[]{
             android.Manifest.permission.FOREGROUND_SERVICE,
             android.Manifest.permission.RECORD_AUDIO,
+            android.Manifest.permission.MODIFY_AUDIO_SETTINGS,
             android.Manifest.permission.INTERNET,
     };
 

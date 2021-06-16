@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -22,7 +21,10 @@ import com.example.codeexp2021app.listener.AudioRecordListener;
 import com.example.codeexp2021app.media.AudioRecordHelper;
 import com.example.codeexp2021app.thread.CustomThreadPool;
 import com.example.codeexp2021app.utils.ContextUtils;
+import com.example.codeexp2021app.utils.FileUtils;
 import com.example.codeexp2021app.utils.LanguageUtils;
+import com.example.codeexp2021app.utils.PcmToWavUtils;
+import com.example.codeexp2021app.utils.ToastUtils;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.speech.v1.RecognitionConfig;
@@ -34,7 +36,10 @@ import com.google.cloud.speech.v1.StreamingRecognizeRequest;
 import com.google.cloud.speech.v1.StreamingRecognizeResponse;
 import com.google.protobuf.ByteString;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -78,6 +83,7 @@ public class AudioCaptureService extends Service implements AudioRecordListener 
         @Override
         public void onError(Throwable t) {
             Log.e(TAG, "Error calling the API.", t);
+            ToastUtils.showShortSafe("Error calling the API");
             finishRecognizing();
             startRecognizing(AudioRecordHelper.getInstance().getSampleRate());
         }
@@ -87,6 +93,9 @@ public class AudioCaptureService extends Service implements AudioRecordListener 
             Log.i(TAG, "API completed.");
         }
     };
+
+    private FileOutputStream mFileOutputStream;
+    private int sampleRate;
 
     @Override
     public void onCreate() {
@@ -160,6 +169,14 @@ public class AudioCaptureService extends Service implements AudioRecordListener 
     }
 
     private void startCaptureAudioTask() {
+        File outputFile = createAudioFile();
+        Log.d(TAG, "Created file for capture target: " + outputFile.getAbsolutePath());
+        try {
+            mFileOutputStream = new FileOutputStream(outputFile);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return;
+        }
         threadPoolCaptureAudio.execute(() -> {
             AudioRecordHelper.getInstance().start();
             AudioRecordHelper.getInstance().process();
@@ -168,6 +185,9 @@ public class AudioCaptureService extends Service implements AudioRecordListener 
 
     private void stopCaptureAudioTask() {
         AudioRecordHelper.getInstance().stop();
+        mFileOutputStream = null;
+        convertPcmToWav();
+        ToastUtils.showShortSafe("Pcm to Wav converted");
     }
 
     /**
@@ -239,9 +259,33 @@ public class AudioCaptureService extends Service implements AudioRecordListener 
         }
     }
 
+    private File createAudioFile() {
+        File audioCapturesDirectory = new File(FileUtils.APP_DIR, Constants.AUDIO_CAPTURE_DIRECTORY);
+        FileUtils.deleteDirectory(audioCapturesDirectory.getAbsolutePath());
+        if (!audioCapturesDirectory.exists()) {
+            audioCapturesDirectory.mkdirs();
+        }
+        return new File(audioCapturesDirectory.getAbsolutePath() + File.separator + Constants.AUDIO_CAPTURE_PCM);
+    }
+
+    private void convertPcmToWav() {
+        File audioCapturesDirectory = new File(FileUtils.APP_DIR, Constants.AUDIO_CAPTURE_DIRECTORY);
+        if (!audioCapturesDirectory.exists()) {
+            return;
+        }
+        PcmToWavUtils pcmToWavUtils = new PcmToWavUtils(sampleRate, Constants.CHANNEL_IN, Constants.ENCODING);
+        File audioCapturePCM = new File(audioCapturesDirectory, Constants.AUDIO_CAPTURE_PCM);
+        File audioCaptureWAV = new File(audioCapturesDirectory, Constants.AUDIO_CAPTURE_WAV);
+        if (audioCaptureWAV.exists()) {
+            audioCaptureWAV.delete();
+        }
+        pcmToWavUtils.pcmToWav(audioCapturePCM.getAbsolutePath(), audioCaptureWAV.getAbsolutePath());
+    }
+
     @Override
     public void onAudioStart() {
-        startRecognizing(AudioRecordHelper.getInstance().getSampleRate());
+        sampleRate = AudioRecordHelper.getInstance().getSampleRate();
+        startRecognizing(sampleRate);
     }
 
     @Override
@@ -252,5 +296,16 @@ public class AudioCaptureService extends Service implements AudioRecordListener 
     @Override
     public void onAudioEnd() {
         finishRecognizing();
+    }
+
+    @Override
+    public void onFile(byte[] data, int size) {
+        if (mFileOutputStream != null) {
+            try {
+                mFileOutputStream.write(data, 0, size);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
