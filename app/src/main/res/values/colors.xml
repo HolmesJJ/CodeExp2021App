@@ -8,4 +8,29 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="red">#FFFF0000</color>
+    <color name="transparent">#00000000</color>
+
+    <color name="seekBarDialogTitle">#ff1e1e1e</color>
+    <color name="seekBarDialogRemark">#ff666666</color>
+    <color name="seekBarDialogNumber">#ff666666</color>
+    <color name="seekBarDialogStart">#ff999999</color>
+    <color name="seekBarDialogEnd">#ff999999</color>
+    <color name="seekBarDialogCancel">#ff999999</color>
+    <color name="seekBarDialogConfirm">#ff666666</color>
+
+    <color name="radioSelectDialogTitle">#FF1E1E1E</color>
+    <color name="radioSelectDialogCancel">#FF999999</color>
+    <color name="radioSelectItemDescription">#FF333333</color>
+
+    <color name="itemEnable">#FF1E1E1E</color>
+    <color name="itemDisable">#FF999999</color>
+
+    <color name="lineBackground">#B3CCCCCC</color>
+    <color name="itemLeftText">#FF333333</color>
+    <color name="itemRightText">#FFAAAAAA</color>
+
+    <color name="postBackground">#F6F6F6</color>
+    <color name="postSubTitle">#FFAAAAAA</color>
+
+    <color name="light_green">#20c793</color>
 </resources>

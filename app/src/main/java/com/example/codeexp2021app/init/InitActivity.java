@@ -1,6 +1,5 @@
 package com.example.codeexp2021app.init;
 
-import android.Manifest;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -22,6 +21,8 @@ public class InitActivity extends BaseActivity<ActivityInitBinding, InitViewMode
             android.Manifest.permission.FOREGROUND_SERVICE,
             android.Manifest.permission.RECORD_AUDIO,
             android.Manifest.permission.MODIFY_AUDIO_SETTINGS,
+            android.Manifest.permission.BLUETOOTH,
+            android.Manifest.permission.BLUETOOTH_ADMIN,
             android.Manifest.permission.INTERNET,
     };
 

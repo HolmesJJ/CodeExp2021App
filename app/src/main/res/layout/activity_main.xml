@@ -8,48 +8,116 @@
     </data>
 
     <RelativeLayout
-        android:id="@+id/rl_container"
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@color/white">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_centerInParent="true">
-
-            <Button
-                android:id="@+id/btn_start_capturing"
-                android:layout_width="@dimen/dp_150"
-                android:layout_height="wrap_content"
-                android:text="@string/start_capturing" />
-
-            <Button
-                android:id="@+id/btn_stop_capturing"
-                android:layout_width="@dimen/dp_150"
-                android:layout_height="wrap_content"
-                android:text="@string/stop_capturing" />
-
-            <Button
-                android:id="@+id/btn_play"
-                android:layout_width="@dimen/dp_150"
-                android:layout_height="wrap_content"
-                android:text="@string/play" />
-
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/tv_error_msg"
+        <com.example.codeexp2021app.ui.widget.ToolBar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/dp_24"
-            android:layout_marginTop="@dimen/dp_24"
-            android:layout_marginBottom="@dimen/dp_24"
-            android:gravity="center"
-            android:textColor="@color/red"
-            android:layout_centerInParent="true"
-            android:layout_alignParentBottom="true" />
+            android:layout_height="wrap_content" />
+
+        <RelativeLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="?android:attr/actionBarSize">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/postBackground"
+                    android:orientation="vertical">
+
+                    <com.example.codeexp2021app.ui.widget.ItemTextView
+                        android:id="@+id/font_size"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/dp_9" />
+
+                    <com.example.codeexp2021app.ui.widget.ItemTextView
+                        android:id="@+id/font_color"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <com.example.codeexp2021app.ui.widget.ItemTextView
+                        android:id="@+id/volume"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <com.example.codeexp2021app.ui.widget.ItemTextView
+                        android:id="@+id/voice_type"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <com.example.codeexp2021app.ui.widget.ItemTextView
+                        android:id="@+id/is_show_emoji"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dp_1"
+                        android:layout_marginTop="@dimen/dp_25"
+                        android:background="@color/lineBackground" />
+
+                    <TextView
+                        android:id="@+id/tv_start_capturing"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        android:textSize="@dimen/sp_16"
+                        android:textColor="@color/itemEnable"
+                        android:text="@string/start_capturing"
+                        android:gravity="center"
+                        android:background="@drawable/bg_ripple_item"
+                        android:padding="@dimen/dp_12" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dp_1"
+                        android:background="@color/lineBackground" />
+
+                    <TextView
+                        android:id="@+id/tv_stop_capturing"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        android:textSize="@dimen/sp_16"
+                        android:textColor="@color/itemEnable"
+                        android:text="@string/stop_capturing"
+                        android:gravity="center"
+                        android:background="@drawable/bg_ripple_item"
+                        android:padding="@dimen/dp_12" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dp_1"
+                        android:background="@color/lineBackground" />
+
+                </LinearLayout>
+
+            </ScrollView>
+
+            <TextView
+                android:id="@+id/tv_error_msg"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/dp_24"
+                android:layout_marginTop="@dimen/dp_24"
+                android:layout_marginBottom="@dimen/dp_24"
+                android:gravity="center"
+                android:textColor="@color/red"
+                android:layout_centerInParent="true"
+                android:layout_alignParentBottom="true" />
+
+        </RelativeLayout>
 
     </RelativeLayout>
 </layout>

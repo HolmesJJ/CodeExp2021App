@@ -118,6 +118,8 @@ dependencies {
     implementation rootProject.ext.dependencies["fastJson"]
     // Java-WebSocket
     implementation rootProject.ext.dependencies["Java-WebSocket"]
+    // color-picker
+    implementation rootProject.ext.dependencies["color-picker"]
     // gRPC
     implementation rootProject.ext.dependencies["grpc-okhttp"]
     implementation rootProject.ext.dependencies["grpc-protobuf-lite"]

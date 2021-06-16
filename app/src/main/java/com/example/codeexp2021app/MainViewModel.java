@@ -17,16 +17,12 @@ import com.example.codeexp2021app.api.ApiClient;
 import com.example.codeexp2021app.api.model.google.CreateTokenResult;
 import com.example.codeexp2021app.base.BaseViewModel;
 import com.example.codeexp2021app.config.Config;
-import com.example.codeexp2021app.constants.Constants;
 import com.example.codeexp2021app.constants.MessageType;
 import com.example.codeexp2021app.media.AudioRecordHelper;
 import com.example.codeexp2021app.network.http.ResponseCode;
 import com.example.codeexp2021app.network.http.Result;
 import com.example.codeexp2021app.thread.ThreadManager;
 import com.example.codeexp2021app.utils.ContextUtils;
-import com.example.codeexp2021app.utils.FileUtils;
-
-import java.io.File;
 
 public class MainViewModel extends BaseViewModel {
 
@@ -39,7 +35,6 @@ public class MainViewModel extends BaseViewModel {
 
     public MutableLiveData<Boolean> mEnableStartCapturing = new MutableLiveData<>();
     public MutableLiveData<Boolean> mEnableStopCapturing = new MutableLiveData<>();
-    public MutableLiveData<Boolean> mEnablePlay = new MutableLiveData<>();
     public MutableLiveData<String> mErrorMsg = new MutableLiveData<>();
 
     private static Handler mHandler;
@@ -80,27 +75,16 @@ public class MainViewModel extends BaseViewModel {
     public void initCapturingBtnState() {
         mEnableStartCapturing.postValue(false);
         mEnableStopCapturing.postValue(false);
-        mEnablePlay.postValue(false);
     }
 
     public void startCapturingBtnState() {
         mEnableStartCapturing.postValue(false);
         mEnableStopCapturing.postValue(true);
-        mEnablePlay.postValue(false);
     }
 
     public void stopCapturingBtnState() {
         mEnableStartCapturing.postValue(true);
         mEnableStopCapturing.postValue(false);
-        mEnablePlay.postValue(true);
-    }
-
-    public void startPlayingBtnState() {
-        mEnablePlay.postValue(false);
-    }
-
-    public void stopPlayingBtnState() {
-        mEnablePlay.postValue(true);
     }
 
     public void createToken() {
@@ -152,44 +136,5 @@ public class MainViewModel extends BaseViewModel {
         } else {
             mErrorMsg.postValue(ContextUtils.getContext().getString(R.string.network_or_server_error_str));
         }
-    }
-
-    private File getAudioCaptureFile() {
-        File audioCapturesDirectory = new File(FileUtils.APP_DIR, Constants.AUDIO_CAPTURE_DIRECTORY);
-        if (!audioCapturesDirectory.exists()) {
-            return null;
-        }
-        File audioCaptureFile = new File(audioCapturesDirectory, Constants.AUDIO_CAPTURE_WAV);
-        if (!audioCaptureFile.exists()) {
-            return null;
-        }
-        return audioCaptureFile;
-    }
-
-    public void play() {
-        File outputFile = getAudioCaptureFile();
-        if (outputFile == null) {
-            return;
-        }
-//        Observable.just(outputFile).subscribeOn(Schedulers.io()).subscribe(new Consumer<File>() {
-//            @Override
-//            public void accept(File file) {
-//                try {
-//                    StreamAudioPlayer mStreamAudioPlayer = StreamAudioPlayer.getInstance();
-//                    mStreamAudioPlayer.init();
-//                    FileInputStream inputStream = new FileInputStream(file);
-//                    int read;
-//                    byte[] mBuffer = new byte[1024];
-//                    while ((read = inputStream.read(mBuffer)) > 0) {
-//                        mStreamAudioPlayer.play(mBuffer, read);
-//                    }
-//                    inputStream.close();
-//                    mStreamAudioPlayer.release();
-//                    stopPlayingBtnState();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        });
     }
 }
