@@ -44,8 +44,6 @@ public class LoginActivity extends BaseActivity<ActivityLoginBinding, LoginViewM
     @Override
     public void initData() {
         super.initData();
-        StatusBarUtils.updateStatusBarColor(this, ContextCompat.getColor(ContextUtils.getContext(), R.color.white));
-        StatusBarUtils.setStatusBarTextBlack(this);
         mViewModel.mUsername.set(mBinding.etUsername.getText().toString());
         mViewModel.mPassword.set(mBinding.etPassword.getText().toString());
     }
@@ -53,6 +51,7 @@ public class LoginActivity extends BaseActivity<ActivityLoginBinding, LoginViewM
     @Override
     public void initViewObservable() {
         super.initViewObservable();
+        initView();
         setObserveListener();
         setTextChangeListener();
         setClickListener();
@@ -66,6 +65,11 @@ public class LoginActivity extends BaseActivity<ActivityLoginBinding, LoginViewM
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void initView() {
+        StatusBarUtils.updateStatusBarColor(this, ContextCompat.getColor(ContextUtils.getContext(), R.color.white));
+        StatusBarUtils.setStatusBarTextBlack(this);
     }
 
     private void setObserveListener() {

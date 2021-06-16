@@ -13,6 +13,7 @@ public class Config {
     public static final String SETTING_CONFIG = "SettingConfig";
     public static String sToken;
     public static long sExpirationTime;
+    public static String sBluetoothDevice;
     public static int sFrontSize;
     public static String sFrontColor;
     public static int sVolume;

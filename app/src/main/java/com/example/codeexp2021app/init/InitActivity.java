@@ -1,5 +1,6 @@
 package com.example.codeexp2021app.init;
 
+import android.Manifest;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -21,12 +22,18 @@ public class InitActivity extends BaseActivity<ActivityInitBinding, InitViewMode
     private static final String TAG = InitActivity.class.getSimpleName();
 
     private static final String[] PERMISSIONS = new String[]{
+            android.Manifest.permission.INTERNET,
+            android.Manifest.permission.ACCESS_NETWORK_STATE,
+            android.Manifest.permission.CHANGE_NETWORK_STATE,
+            android.Manifest.permission.ACCESS_WIFI_STATE,
+            android.Manifest.permission.CHANGE_WIFI_STATE,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
             android.Manifest.permission.FOREGROUND_SERVICE,
             android.Manifest.permission.RECORD_AUDIO,
             android.Manifest.permission.MODIFY_AUDIO_SETTINGS,
             android.Manifest.permission.BLUETOOTH,
             android.Manifest.permission.BLUETOOTH_ADMIN,
-            android.Manifest.permission.INTERNET,
     };
 
     @Override
@@ -47,8 +54,6 @@ public class InitActivity extends BaseActivity<ActivityInitBinding, InitViewMode
     @Override
     public void initData() {
         super.initData();
-        StatusBarUtils.updateStatusBarColor(this, ContextCompat.getColor(ContextUtils.getContext(), R.color.white));
-        StatusBarUtils.setStatusBarTextBlack(this);
         PermissionsUtils.doSomeThingWithPermission(this, () -> {
             if (mViewModel != null) {
                 mViewModel.initData();
@@ -59,6 +64,7 @@ public class InitActivity extends BaseActivity<ActivityInitBinding, InitViewMode
     @Override
     public void initViewObservable() {
         super.initViewObservable();
+        initView();
         showLoading(false);
         mViewModel.mActivityAction.observe(this, activityAction -> {
             Intent intent = new Intent(ContextUtils.getContext(), activityAction);
@@ -94,5 +100,10 @@ public class InitActivity extends BaseActivity<ActivityInitBinding, InitViewMode
         if (mViewModel != null) {
             mViewModel.initData();
         }
+    }
+
+    private void initView() {
+        StatusBarUtils.updateStatusBarColor(this, ContextCompat.getColor(ContextUtils.getContext(), R.color.white));
+        StatusBarUtils.setStatusBarTextBlack(this);
     }
 }

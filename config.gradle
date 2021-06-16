@@ -59,5 +59,8 @@ ext {
 
             // color-picker
             "color-picker"               : 'com.github.QuadFlask:colorpicker:0.0.15',
+
+            // swipe-refresh-layout
+            "swipe-refresh-layout"       : 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     ]
 }

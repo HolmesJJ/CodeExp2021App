@@ -5,8 +5,6 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
@@ -18,6 +16,7 @@ import com.example.codeexp2021app.constants.SpUtilValueConstants;
 import com.example.codeexp2021app.databinding.ActivityMainBinding;
 import com.example.codeexp2021app.listener.OnMultiClickListener;
 import com.example.codeexp2021app.service.AudioCaptureService;
+import com.example.codeexp2021app.ui.activity.BluetoothActivity;
 import com.example.codeexp2021app.ui.widget.dialog.RadioSelectDialog;
 import com.example.codeexp2021app.ui.widget.dialog.SeekBarDialog;
 import com.example.codeexp2021app.utils.ContextUtils;
@@ -57,8 +56,11 @@ public class MainActivity extends BaseActivity<ActivityMainBinding, MainViewMode
     @Override
     public void initData() {
         super.initData();
-        StatusBarUtils.updateStatusBarColor(this, ContextCompat.getColor(ContextUtils.getContext(), R.color.light_green));
         mBinding.toolbar.setTitle(ContextUtils.getContext().getString(R.string.main_menu));
+        mBinding.bluetoothDevice.setLeftText(R.string.bluetooth_device).setBottomLineVisible(false)
+                .setItemClickListener(
+                        () -> startActivity(BluetoothActivity.class)
+                );
         mBinding.fontSize.setLeftText(R.string.front_size).setRightText(Config.sFrontSize + "sp").setBottomLineVisible(false)
                 .setItemClickListener(
                         this::showUpdateFontSizeDialog
@@ -84,6 +86,7 @@ public class MainActivity extends BaseActivity<ActivityMainBinding, MainViewMode
     @Override
     public void initViewObservable() {
         super.initViewObservable();
+        initView();
         setObserveListener();
         setClickListener();
         mViewModel.initCapturingBtnState();
@@ -95,6 +98,10 @@ public class MainActivity extends BaseActivity<ActivityMainBinding, MainViewMode
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    private void initView() {
+        StatusBarUtils.updateStatusBarColor(this, ContextCompat.getColor(ContextUtils.getContext(), R.color.light_green));
     }
 
     private void setObserveListener() {

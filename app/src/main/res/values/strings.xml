@@ -13,6 +13,7 @@
     <string name="prompt_password">Password</string>
     <string name="action_sign_in">Sign In</string>
 
+    <string name="username_or_password_error_str">Username or Password Error</string>
     <string name="network_or_server_error_str">Network or Server Error</string>
     <string name="website_format_error">Abnormal Server Address</string>
 
@@ -20,7 +21,9 @@
     <string name="front_size_unit">Scalable Pixels</string>
 
     <string name="main_menu">Main Menu</string>
+    <string name="devices_list">Devices List</string>
 
+    <string name="bluetooth_device">Bluetooth Device</string>
     <string name="front_size">Front Size</string>
     <string name="front_color">Front Color</string>
     <string name="volume">Volume</string>
@@ -37,6 +40,10 @@
 
     <string name="start_capturing">Start Capturing</string>
     <string name="stop_capturing">Stop Capturing</string>
-    <string name="play">Play</string>
     <string name="audio_capturing">Audio Capturing...</string>
+    <string name="disconnect">Disconnect</string>
+
+    <string name="unpaired">Unpaired</string>
+    <string name="pairing">Pairing</string>
+    <string name="paired">Paired</string>
 </resources>

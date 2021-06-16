@@ -1,5 +1,7 @@
 package com.example.codeexp2021app.ui.viewmodel;
 
+import android.text.TextUtils;
+
 import androidx.databinding.ObservableBoolean;
 import androidx.databinding.ObservableField;
 import androidx.lifecycle.Lifecycle;
@@ -15,6 +17,8 @@ import com.example.codeexp2021app.network.http.ResponseCode;
 import com.example.codeexp2021app.network.http.Result;
 import com.example.codeexp2021app.thread.ThreadManager;
 import com.example.codeexp2021app.utils.ContextUtils;
+
+import java.util.Objects;
 
 public class LoginViewModel extends BaseViewModel {
 
@@ -42,8 +46,8 @@ public class LoginViewModel extends BaseViewModel {
     }
 
     public void login() {
-//        String username = mUsername.get();
-//        String password = mPassword.get();
+        String username = mUsername.get();
+        String password = mPassword.get();
 //        ThreadManager.getThreadPollProxy().execute(new Runnable() {
 //            @Override
 //            public void run() {
@@ -56,7 +60,11 @@ public class LoginViewModel extends BaseViewModel {
 //                }
 //            }
 //        });
-        mActivityAction.postValue(MainActivity.class);
+        if (Objects.equals(username, "yym666") && Objects.equals(password, "123456")) {
+            mActivityAction.postValue(MainActivity.class);
+        } else {
+            mErrorMsg.postValue(ContextUtils.getContext().getString(R.string.username_or_password_error_str));
+        }
     }
 
     /**

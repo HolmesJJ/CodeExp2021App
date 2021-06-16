@@ -16,15 +16,18 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.example.codeexp2021app.api.ApiClient;
 import com.example.codeexp2021app.api.model.google.CreateTokenResult;
 import com.example.codeexp2021app.base.BaseViewModel;
+import com.example.codeexp2021app.bluetooth.BluetoothHelper;
 import com.example.codeexp2021app.config.Config;
 import com.example.codeexp2021app.constants.MessageType;
+import com.example.codeexp2021app.listener.BluetoothListener;
 import com.example.codeexp2021app.media.AudioRecordHelper;
 import com.example.codeexp2021app.network.http.ResponseCode;
 import com.example.codeexp2021app.network.http.Result;
 import com.example.codeexp2021app.thread.ThreadManager;
 import com.example.codeexp2021app.utils.ContextUtils;
+import com.example.codeexp2021app.utils.ToastUtils;
 
-public class MainViewModel extends BaseViewModel {
+public class MainViewModel extends BaseViewModel implements BluetoothListener {
 
     private static final String TAG = MainViewModel.class.getSimpleName();
 
@@ -55,7 +58,7 @@ public class MainViewModel extends BaseViewModel {
                 AudioRecordHelper.getInstance().dismiss();
             }
             if (!TextUtils.isEmpty(text)) {
-                Log.i(TAG, text);
+                BluetoothHelper.getInstance().send(text);
             }
         }
     };
@@ -64,12 +67,14 @@ public class MainViewModel extends BaseViewModel {
     private void onCreate() {
         mHandler = new Handler();
         LocalBroadcastManager.getInstance(ContextUtils.getContext()).registerReceiver(mRecognizedBroadcastReceiver, new IntentFilter(MessageType.RECOGNIZED.getValue()));
+        BluetoothHelper.getInstance().init(this);
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     protected void onDestroy() {
         mHandler.removeCallbacks(mFetchAccessTokenRunnable);
         mHandler = null;
+        BluetoothHelper.getInstance().release();
     }
 
     public void initCapturingBtnState() {
@@ -136,5 +141,40 @@ public class MainViewModel extends BaseViewModel {
         } else {
             mErrorMsg.postValue(ContextUtils.getContext().getString(R.string.network_or_server_error_str));
         }
+    }
+
+    @Override
+    public void onListening() {
+        Log.i(TAG, "onListening");
+        ToastUtils.showShortSafe("Bluetooth Listening...");
+    }
+
+    @Override
+    public void onConnecting() {
+        Log.i(TAG, "onConnecting");
+        ToastUtils.showShortSafe("Bluetooth Connecting...");
+    }
+
+    @Override
+    public void onConnected() {
+        Log.i(TAG, "onConnected");
+        ToastUtils.showShortSafe("Bluetooth Connected...");
+    }
+
+    @Override
+    public void onDisconnected() {
+        Log.i(TAG, "onDisconnected");
+        ToastUtils.showShortSafe("Bluetooth Disconnected...");
+    }
+
+    @Override
+    public void onConnectionFailed() {
+        Log.i(TAG, "onConnectionFailed");
+        ToastUtils.showShortSafe("Bluetooth Connection Failed...");
+    }
+
+    @Override
+    public void onMessageReceived(String message) {
+        Log.i(TAG, "onMessageReceived " + message);
     }
 }

@@ -36,10 +36,15 @@
                     android:orientation="vertical">
 
                     <com.example.codeexp2021app.ui.widget.ItemTextView
-                        android:id="@+id/font_size"
+                        android:id="@+id/bluetooth_device"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/dp_9" />
+
+                    <com.example.codeexp2021app.ui.widget.ItemTextView
+                        android:id="@+id/font_size"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
 
                     <com.example.codeexp2021app.ui.widget.ItemTextView
                         android:id="@+id/font_color"
